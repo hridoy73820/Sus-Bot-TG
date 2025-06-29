@@ -3,8 +3,8 @@ const Group = require('../../models/Group');
 const settings = require('../../config/settings.json');
 
 module.exports = {
-  name: "Prefix",
-  aliases: ["'prefix", "pfx"],
+  name: "prefix",
+  aliases: ["Prefix", "pfx"],
   author: "Hridoy",
   countDown: 2,
   role: 0,

@@ -9,10 +9,10 @@ module.exports = {
   author: "Hridoy",
   countDown: 2,
   role: 0,
-  description: "Applies a pride overlay to the user's or replied user's profile photo.",
+  description: "Applies a pride overlay to the user's profile photo, replied user's photo, or replied image.",
   category: "Fun",
   usePrefix: true,
-  usage: "{pn} [reply to message]",
+  usage: "{pn} [reply to message or image]",
   execute: async (bot, msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id.toString();
@@ -32,39 +32,61 @@ module.exports = {
       await user.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 1 } });
       await user.save();
 
-    
       let targetUserId = userId;
       let targetUsername = msg.from.username || msg.from.first_name || 'User';
       let isReplied = false;
+      let imageUrl = 'https://sus-apis.onrender.com/assets/images/logo.png';
 
       if (msg.reply_to_message) {
-        targetUserId = msg.reply_to_message.from.id.toString();
-        targetUsername = msg.reply_to_message.from.username || msg.reply_to_message.from.first_name || 'User';
         isReplied = true;
-      }
-
-      let targetUser = await User.findOne({ telegramId: targetUserId });
-      if (!targetUser) {
-        targetUser = new User({
-          telegramId: targetUserId,
-          username: targetUsername,
-          firstName: isReplied ? msg.reply_to_message.from.first_name : msg.from.first_name,
-          lastName: isReplied ? msg.reply_to_message.from.last_name : msg.from.last_name,
-        });
-      }
-      await targetUser.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 0 } });
-      await targetUser.save();
-
-      let imageUrl = 'https://sus-apis.onrender.com/assets/images/logo.png';
-      try {
-        const userProfile = await bot.getUserProfilePhotos(targetUserId, { limit: 1 });
-        if (userProfile.total_count > 0) {
-          const fileId = userProfile.photos[0][0].file_id;
+     
+        if (msg.reply_to_message.photo) {
+          const fileId = msg.reply_to_message.photo[msg.reply_to_message.photo.length - 1].file_id;
           const file = await bot.getFile(fileId);
           imageUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+          targetUsername = 'replied image';
+        } else {
+
+          targetUserId = msg.reply_to_message.from.id.toString();
+          targetUsername = msg.reply_to_message.from.username || msg.reply_to_message.from.first_name || 'User';
+          try {
+            const userProfile = await bot.getUserProfilePhotos(targetUserId, { limit: 1 });
+            if (userProfile.total_count > 0) {
+              const fileId = userProfile.photos[0][0].file_id;
+              const file = await bot.getFile(fileId);
+              imageUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+            }
+          } catch (error) {
+            console.error('Error fetching profile photo:', error.message);
+          }
         }
-      } catch (error) {
-        console.error('Error fetching profile photo:', error.message);
+      } else {
+   
+        try {
+          const userProfile = await bot.getUserProfilePhotos(targetUserId, { limit: 1 });
+          if (userProfile.total_count > 0) {
+            const fileId = userProfile.photos[0][0].file_id;
+            const file = await bot.getFile(fileId);
+            imageUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+          }
+        } catch (error) {
+          console.error('Error fetching profile photo:', error.message);
+        }
+      }
+
+  
+      if (!msg.reply_to_message?.photo) {
+        let targetUser = await User.findOne({ telegramId: targetUserId });
+        if (!targetUser) {
+          targetUser = new User({
+            telegramId: targetUserId,
+            username: targetUsername,
+            firstName: isReplied ? msg.reply_to_message.from.first_name : msg.from.first_name,
+            lastName: isReplied ? msg.reply_to_message.from.last_name : msg.from.last_name,
+          });
+        }
+        await targetUser.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 0 } });
+        await targetUser.save();
       }
 
       const apiUrl = `https://sus-apis.onrender.com/api/pride-overlay?image=${encodeURIComponent(imageUrl)}`;
@@ -79,7 +101,8 @@ module.exports = {
         }
         await fs.writeFile(tempFilePath, Buffer.from(response.data));
 
-        const caption = isReplied ? `Pride overlay for @${targetUsername}! 🌈` : 'Look i found a gay 🤣 🌈';
+        const caption = isReplied && !msg.reply_to_message.photo ? `Look i found a gay 🤣 🌈 @${targetUsername}! ` : 
+                       isReplied ? 'Look i found a gay 🤣 🌈' : 'Look i found a gay 🤣 🌈';
         await bot.sendPhoto(chatId, tempFilePath, {
           caption,
           reply_to_message_id: messageId

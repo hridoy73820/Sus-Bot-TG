@@ -16,7 +16,7 @@ module.exports = {
       const username = member.username || member.first_name || 'User';
 
       try {
-        // Update user details
+
         let user = await User.findOne({ telegramId: userId });
         if (!user) {
           user = new User({
@@ -29,7 +29,7 @@ module.exports = {
         await user.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 0 } });
         await user.save();
 
-        // Get user profile photo
+
         let imageUrl = 'https://sus-apis.onrender.com/assets/images/logo.png';
         try {
           const userProfile = await bot.getUserProfilePhotos(userId, { limit: 1 });
@@ -38,7 +38,7 @@ module.exports = {
             const file = await bot.getFile(fileId);
             imageUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
           } else {
-            // Fallback to group photo
+        
             const chat = await bot.getChat(chatId);
             if (chat.photo) {
               const fileId = chat.photo.big_file_id;
@@ -50,12 +50,12 @@ module.exports = {
           logger.error('Error fetching profile photo', { error: error.message });
         }
 
-        // Get group name and member count
+ 
         const chat = await bot.getChat(chatId);
         const groupName = chat.title || 'the group';
         const memberCount = await bot.getChatMemberCount(chatId);
 
-        // Generate random welcome message (4-5 words)
+     
         const welcomeMessages = [
           'Glad you’re here!',
           'Welcome to the crew!',
@@ -65,16 +65,14 @@ module.exports = {
         ];
         const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
 
-        // Construct API URL
+
         const apiUrl = `https://sus-apis.onrender.com/api/welcome-card-v2?image=${encodeURIComponent(imageUrl)}&name=${encodeURIComponent(username)}&text1=Welcome to ${encodeURIComponent(groupName)}&text2=${encodeURIComponent(randomMessage)}&memberCount=${memberCount}`;
 
-        // Fetch welcome card
         const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
         if (response.status !== 200) {
           throw new Error('Failed to generate welcome card');
         }
 
-        // Send image to chat with mention
         const mention = member.username ? `@${member.username}` : member.first_name;
         await bot.sendPhoto(chatId, Buffer.from(response.data), {
           caption: `${mention}, welcome to ${groupName}! 🎉`,
@@ -85,7 +83,7 @@ module.exports = {
       } catch (error) {
         console.error('New member event error:', error.message);
         logger.error('New member event error', { event: 'new_member', error: error.message });
-        // Fallback to text message
+    
         await bot.sendMessage(chatId, `Welcome ${username} to the group! 🎉 Use /help to see available commands.`, {
           reply_to_message_id: msg.message_id
         });

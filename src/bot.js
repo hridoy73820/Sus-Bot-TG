@@ -12,7 +12,22 @@ class Bot {
     this.commands = new Map();
     this.cooldowns = new Map();
     this.setupCommands();
+
+    this.bot.on('callback_query', async (query) => {
+      try {
+        if (query.data && query.data.startsWith('play_music_')) {
+        
+          const playCmd = require(path.join(__dirname, 'scripts', 'commands', 'play.js'));
+          if (typeof playCmd.onCallbackQuery === 'function') {
+            await playCmd.onCallbackQuery(this.bot, query);
+          }
+        }
+      } catch (err) {
+        logger.error('Error in callback_query handler', { error: err.message });
+      }
+    });
   }
+  
 
   async setupCommands() {
     const commandsDir = path.join(__dirname, 'scripts', 'commands');

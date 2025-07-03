@@ -4,5 +4,6 @@
   "ownerUid": "1797686564",
   "admins": ["1797686564"],
   "botPrefix": "!",
-  "botLanguage": "en"
+  "botLanguage": "en",
+  "avatarUrl": "https://sus-apis.onrender.com/cdn/images/developer.jpeg"
 }

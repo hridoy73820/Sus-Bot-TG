@@ -65,6 +65,12 @@ class Bot {
     };
 
     let user = await User.findOne({ telegramId: userId });
+    if (user && user.ban) {
+      return this.bot.sendMessage(chatId, `🚫 You are banned from using the bot.\nReason: <b>${user.banReason || "No reason provided"}</b>`, {
+        reply_to_message_id: msg.message_id,
+        parse_mode: "HTML"
+      });
+    }
     if (!user) {
       user = new User({
         telegramId: userId,

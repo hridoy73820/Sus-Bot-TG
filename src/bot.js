@@ -16,7 +16,6 @@ class Bot {
     this.bot.on('callback_query', async (query) => {
       try {
         if (query.data && query.data.startsWith('play_music_')) {
-        
           const playCmd = require(path.join(__dirname, 'scripts', 'commands', 'play.js'));
           if (typeof playCmd.onCallbackQuery === 'function') {
             await playCmd.onCallbackQuery(this.bot, query);
@@ -27,7 +26,6 @@ class Bot {
       }
     });
   }
-  
 
   async setupCommands() {
     const commandsDir = path.join(__dirname, 'scripts', 'commands');
@@ -152,6 +150,9 @@ class Bot {
         return;
       }
     }
+
+    const mediaDownloader = require(path.join(__dirname, 'scripts', 'events', 'mediaDownloader.js'));
+    await mediaDownloader.execute(this.bot, msg);
 
     logger.info('Ignored non-command text', { text: msg.text });
   }

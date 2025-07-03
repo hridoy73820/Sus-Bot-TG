@@ -6,7 +6,7 @@ const restartTxt = path.join(__dirname, '..', '..', 'caches', 'restart.txt');
 
 module.exports = {
   name: "restart",
-  aliases: ["reboot"],
+  aliases: ["rst"],
   author: "Hridoy",
   countDown: 0,
   role: 1,

@@ -8,7 +8,7 @@ module.exports = {
   author: "Hridoy",
   countDown: 2,
   role: 0,
-  description: "Answer a True/False quiz question!",
+  description: "Answer a True/False quiz question! Earn coins for correct answers.",
   category: "Fun",
   usePrefix: true,
   usage: "{pn}",
@@ -33,7 +33,6 @@ module.exports = {
       await user.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 1 } });
       await user.save();
 
- 
       const res = await axios.get("https://sus-apis.onrender.com/api/quiz?amount=1&difficulty=hard&type=boolean");
       const question = res.data?.data?.questions?.[0];
       if (!question) throw new Error("No question found");
@@ -80,12 +79,28 @@ module.exports = {
 
           const isCorrect = guess === quiz.correctAnswer;
 
-          await bot.sendMessage(chatId, isCorrect
-            ? `✅ *Correct!* You're a brainiac bro!`
-            : `❌ *Wrong!* Correct answer was: *${quiz.correctAnswer}*`, {
-            parse_mode: "Markdown",
-            reply_to_message_id: reply.message_id
-          });
+          if (isCorrect) {
+ 
+            const earned = Math.floor(Math.random() * 51) + 50;
+            let awardUser = await User.findOne({ telegramId: userId });
+            if (!awardUser) {
+              awardUser = user;
+            }
+            awardUser.wallet = (awardUser.wallet || 0) + earned;
+            await awardUser.save();
+
+            await bot.sendMessage(chatId, 
+              `✅ *Correct!* You're a brainiac bro!\n\n💰 You earned *${earned}* coins!\n\n💳 *Wallet:* \`${awardUser.wallet}\``, {
+              parse_mode: "Markdown",
+              reply_to_message_id: reply.message_id
+            });
+          } else {
+            await bot.sendMessage(chatId, 
+              `❌ *Wrong!* Correct answer was: *${quiz.correctAnswer}*`, {
+              parse_mode: "Markdown",
+              reply_to_message_id: reply.message_id
+            });
+          }
 
           bot._activeTFQuizzes.delete(quizKey);
           bot.off("message", onReply);

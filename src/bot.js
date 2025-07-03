@@ -20,7 +20,13 @@ class Bot {
           if (typeof playCmd.onCallbackQuery === 'function') {
             await playCmd.onCallbackQuery(this.bot, query);
           }
+        } else if (query.data && query.data.startsWith('minegame_')) {
+          const mineCmd = require(path.join(__dirname, 'scripts', 'commands', 'mine.js'));
+          if (typeof mineCmd.onCallbackQuery === 'function') {
+            await mineCmd.onCallbackQuery(this.bot, query);
+          }
         }
+        // ... more callback...
       } catch (err) {
         logger.error('Error in callback_query handler', { error: err.message });
       }
@@ -82,6 +88,36 @@ class Bot {
     await user.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 1 } });
     await user.save();
 
+   
+      const XP_PER_MESSAGE = 10; 
+
+  
+      user.xp += XP_PER_MESSAGE;
+      user.currentXP += XP_PER_MESSAGE;
+  
+ 
+      let leveledUp = false;
+      while (user.currentXP >= user.requiredXP) {
+        user.currentXP -= user.requiredXP;
+        user.level += 1;
+       
+        user.requiredXP = 100 + (user.level - 1) * 50;
+        leveledUp = true;
+      }
+  
+  
+      const users = await User.find({}).sort({ xp: -1 }).select('telegramId xp');
+      const rank = users.findIndex(u => u.telegramId === user.telegramId) + 1;
+      user.rank = rank;
+  
+      await user.save();
+  
+      
+      if (leveledUp) {
+        this.bot.sendMessage(chatId, `🎉 <b>${user.username || user.firstName || "User"}</b> leveled up to <b>Level ${user.level}</b>!`, {
+          parse_mode: "HTML"
+        });
+      }
     logger.info('Received message', logData);
 
     if (msg.new_chat_members) {

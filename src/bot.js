@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const logger = require('./utils/logger');
 const settings = require('./config/settings.json');
+const shopCommand = require('./scripts/commands/shop.js');
 const Group = require('./models/Group');
 const User = require('./models/User');
 
@@ -25,6 +26,9 @@ class Bot {
           if (typeof mineCmd.onCallbackQuery === 'function') {
             await mineCmd.onCallbackQuery(this.bot, query);
           }
+        } else if (query.data && query.data.startsWith('shop_')) {  
+          await shopCommand.onCallbackQuery(this.bot, query);
+          return;
         }
         // ... more callback...
       } catch (err) {

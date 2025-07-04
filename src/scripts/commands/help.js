@@ -19,7 +19,6 @@ module.exports = {
     const userId = msg.from.id.toString();
 
     try {
-  
       let user = await User.findOne({ telegramId: userId });
       if (!user) {
         user = new User({
@@ -31,7 +30,6 @@ module.exports = {
       }
       await user.updateOne({ lastInteraction: new Date(), $inc: { commandCount: 1 } });
       await user.save();
-
 
       const commandsDir = path.join(__dirname, '..', 'commands');
       const files = await fs.readdir(commandsDir);
@@ -46,15 +44,13 @@ module.exports = {
         }
       }
 
-
       const group = await Group.findOne({ groupId: chatId });
       const prefix = group ? group.prefix : settings.botPrefix;
 
       if (args) {
         const commandName = args.toLowerCase();
         let command = commands.get(commandName);
-        
- 
+
         if (!command) {
           for (const cmd of commands.values()) {
             if (cmd.aliases && cmd.aliases.includes(commandName)) {
@@ -92,42 +88,41 @@ module.exports = {
         }
       }
 
-
+     
       const categories = {};
       commands.forEach(cmd => {
-        if (!categories[cmd.category]) {
-          categories[cmd.category] = [];
-        }
-        if (!categories[cmd.category].includes(cmd.name)) {
-          categories[cmd.category].push(cmd.name);
-        }
+        const cat = (cmd.category || "Uncategorized").toUpperCase();
+        if (!categories[cat]) categories[cat] = [];
+        if (!categories[cat].includes(cmd.name)) categories[cat].push(cmd.name);
       });
+
+
+
+      
+      const sortedCats = Object.keys(categories).sort();
 
       let helpMessage = `
 ╔════════════════════════════╗
-║     🔥 ${settings.botName} HELP MENU     ║
+║     🔥 ${settings.botName.toUpperCase()} HELP MENU     ║
 ╚════════════════════════════╝
 
 👑 Owner: ${settings.ownerName}
 💻 Total Commands: ${commands.size}
 📌 Categories:
+`;
 
-`;
-      for (const [category, cmds] of Object.entries(categories)) {
-        helpMessage += `
-📂 ${category}
-${cmds.map((cmd, index) => `${index === cmds.length - 1 ? '└─' : '├─'} ${cmd}`).join('\n')}
-`;
+      for (const category of sortedCats) {
+        const cmds = categories[category];
+        helpMessage += `╭─✦ ${category} ✦\n│ ${cmds.join(', ')}\n╰────────\n\n`;
       }
 
-      helpMessage += `
-━━━━━━━━━━━━━━━━━━━━━━━━
+      helpMessage += `━━━━━━━━━━━━━━━━━━━━━━━━
 💬 Tip: Use ${prefix}help <command> for details
-⚡ Stay sussy, stay powerful ⚡
+⚡️ Stay sussy, stay powerful ⚡️
 ✨ Owner: ${settings.ownerName}
       `;
 
-      await bot.sendMessage(chatId, helpMessage);
+      await bot.sendMessage(chatId, helpMessage.trim());
     } catch (error) {
       console.error('Help command error:', error.message);
       await bot.sendMessage(chatId, 'Something went wrong. Please try again.');

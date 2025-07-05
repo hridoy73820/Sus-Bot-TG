@@ -291,7 +291,7 @@ We’re active, friendly, and ready to assist you anytime 😎
 
 ## 📝 License
 
-This project is licensed under the ISC License - see the [LICENSE](https://claude.ai/chat/LICENSE) file for details.
+This project is licensed under the ISC License - see the [LICENSE](https://github.com/1dev-hridoy/Sus-Apis/tree/main?tab=MIT-1-ov-file) file for details.
 
 ## 🙏 Acknowledgments
 

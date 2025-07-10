@@ -1,10 +1,10 @@
 {
-  "botName": "SUS BOT",
-  "ownerName": "Hridoy",
-  "ownerUid": "1797686564",
+  "botName": "BotName",
+  "ownerName": "Your Name",
+  "ownerUid": "5655756295",
   "admins": ["1797686564"],
   "botPrefix": "!",
-  "botLanguage": "en",
+  "botLanguage": "bn",
   "avatarUrl": "https://sus-apis.onrender.com/cdn/images/developer.jpeg",
   "supportGC": "https://t.me/hridoy4_02"
 }
